@@ -1,8 +1,7 @@
 version: "3"
 services:
-  def-occlum-keyring:
-    # Before changing version numbers, make sure your device is in Standby status, or not registered. Otherwise you will be punished.
-    image: deepsafe/def-occlum-keyring:v1.0.0
+  bnk-occlum-keyring:
+    image: safexn/deeps-occlum-keyring:pre1.2.0
     restart: always
     network_mode: "host"
     environment:
@@ -14,4 +13,5 @@ services:
     devices:
         - /dev/sgx/enclave:/dev/sgx/enclave
         - /dev/sgx/provision:/dev/sgx/provision
-    command: bash -c 'cp /configs/keyring.toml /root/occlum_instance; cd /root/occlum_instance; occlum print mrsigner; occlum print mrenclave; occlum run /bin/def-keyring run /host/keyring.toml'
+    command: bash -c 'cp /configs/keyring.toml /root/occlum_instance; source /root/.bashrc; cd /root/occlum_instance; occlum print mrsigner; occlum print mrenclave; occlum run /bin/deeps-keyring run /host/keyring.toml'
+
