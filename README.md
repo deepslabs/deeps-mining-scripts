@@ -253,7 +253,7 @@ Wait for one epoch, and once the total staked amount reaches the threshold (1000
 
 ![dhc-join](./images/dhc-join.png)
 
-When the device status changes to `Service`, **congratulations** 鈥?the process is complete.
+When the device status changes to `Service`, **congratulations** - the process is complete.
 
 ![dhc-joined](./images/dhc-joined.png)
 
