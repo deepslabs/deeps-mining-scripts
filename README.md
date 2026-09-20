@@ -1,3 +1,5 @@
+# Mining Guidance
+
 - [Mining Guidance](#mining-guidance)
   - [Instructions](#instructions)
   - [SGX](#sgx)
@@ -5,20 +7,18 @@
     - [Preparing an Account](#preparing-an-account)
       - [Option 1](#option-1)
       - [Option 2](#option-2)
-    - [Preparing Coin](#preparing-coin)
+    - [Preparing Tokens](#preparing-tokens)
     - [Configuration Modification](#configuration-modification)
     - [Startup and Maintenance](#startup-and-maintenance)
       - [Update Device](#update-device)
       - [Exiting the Service (if required)](#exiting-the-service-if-required)
   - [FAQ](#faq)
 
-# Mining Guidance
-
 ## Instructions
 
 Before starting, please cofirm on [Intel© Ark](https://ark.intel.com/content/www/us/en/ark.html#@Processors) whether your processor is compatible with [Intel© SGX](https://www.intel.com/content/www/us/en/developer/tools/software-guard-extensions/overview.html).
 
-Start by cloning the repository.
+Then clone the repository:
 
 ```bash
 git clone https://github.com/deepslabs/deeps-mining-scripts.git
@@ -29,16 +29,17 @@ git clone https://github.com/deepslabs/deeps-mining-scripts.git
 Inspect your system's SGX support with:
 
 ```shell
-./sgx-detect
+sudo ./sgx-detect
 ```
 
-Install sgx driver:
-```
-apt update
-apt install  build-essential  automake autoconf libtool wget python libssl-dev dkms
+Install the packages required to build the SGX driver:
+
+```shell
+sudo apt update
+sudo apt install build-essential automake autoconf libtool wget python3 libssl-dev dkms
 ```
 
-Sample Output:
+Sample output:
 
 ```text
 ✔  SGX instruction set
@@ -73,11 +74,11 @@ sudo reboot
 
 ## Running the Service
 
-After confirming that your machine supports SGX2, you can proceed to launch the keyring service. The keyring service relies on obtaining events and state from a node service. In the configuration file, it is advisable to use an official node as the data source. Alternatively, you can initiate a local full node and utilize it as a data source once data synchronization is finished.
+Once you have confirmed that your machine supports SGX2, you can launch the keyring service. The keyring service obtains events and state from a node service. In the configuration file, it is advisable to use an official node as the data source. Alternatively, you can start a local full node and use it as the data source once synchronization is complete.
 
 ### Preparing an Account
 
-Before initiating the process, you must create an account to serve as the owner responsible for holding and managing the current keyring service.
+Before starting the service, you must create an account to serve as the owner responsible for holding and managing the keyring service.
 
 #### Option 1
 
@@ -91,33 +92,32 @@ Public key (hex): 0x0248e7f02dcc9f7061a090b67dede93d7381847e94955aee7996603d2225
 Account ID:       0x34a5572cb21d34354e3091564d5edc7b791e9d5f
 ```
 
-`Secret seed` signifies the account's private key, which can be directly imported into wallets such as MetaMask.
-`Account ID` represents the account's address.
+`Secret seed` is the account's private key, which can be imported directly into wallets such as MetaMask.
+`Account ID` is the account's address.
 
 #### Option 2
 
-An alternative approach is to create an account using MetaMask since the DeepS account system is Ethereum-compatible.
+Alternatively, you can create an account with MetaMask, because the DeepS account system is Ethereum-compatible.
 
-We recommend using MetaMask here because subsequent operations will require interaction with the [dhc dashboard](https://dhc.deeps.fi/beta_mainnet).
+We recommend MetaMask here, since subsequent operations require interaction with the [DHC dashboard](https://test-dhcs.deeps.fi/testnet).
 
-### Preparing Coin
+### Preparing Tokens
 
-Prepare some DEF with your address to make sure for the deployment.
+Fund your address with some tDPS so that the device can be deployed.
 
 ### Configuration Modification
 
-For the majority of users, just substitute the `device_owner` in the default configuration file with the `Account ID` created in the previous step. There is no need to modify other parameters.
+For most users, simply replace `device_owner` in the default configuration file with the `Account ID` created in the previous step. No other parameters need to be modified.
 
-For example：
-Open the `keyring.toml` file under the `configs` directory and replace `0x00000000000000000000000000000000000000`with your `<Account ID>`。
+For example, open the `keyring.toml` file under the `configs` directory and replace `0x00000000000000000000000000000000000000` with your `<Account ID>`.
 
-Use `./dhc config -n <network>` to generate the default configuration file, encompassing identity information, service ports, P2P network, service launch types, etc., is as follows：
+Run `./dhc config -n <network>` to generate the default configuration file. It covers identity information, service ports, the P2P network, the service launch type, and so on, as shown below:
 
 ```toml
 node_ws_url = "ws://127.0.0.1:9944"
 # local node_call server port.
 node_call_port = 8720
-# the owner address of device （ETH type format）
+# the owner address of the device (ETH format)
 device_owner = "0x00000000000000000000000000000000000000"
 # database path
 db_path = "/host/data"
@@ -146,73 +146,72 @@ only_global_ips = true
 #external_multiaddrs = ["/ip4/127.0.0.1/tcp/38700"]
 
 [key_server_config]
-attestation_style = 2 #This corresponds to using an image, epid=1, dcap=2
+attestation_style = 2 # This corresponds to using an image: epid=1, dcap=2
 seal_policy = "MRENCLAVE"
 exe_policy = { Multiply = { executors = 8 } }
 round_time_limit = 180
 clear_msg_interval = 360
 ```
 
-Parameter Descriptions:
+Parameter descriptions:
 
-- **`node_ws_url`**: The accessible endpoint of the node service. If using a local port, it might be `ws://127.0.0.1:9944`.
+- **`node_ws_url`**: The accessible endpoint of the node service. For a local node, this is usually `ws://127.0.0.1:9944`.
 
-- **`node_call_port`**: The port number through which the keyring service is exposed to the outside world.
+- **`node_call_port`**: The port on which the keyring service is exposed to the outside world.
 
-- **`identity`**: The owner of the keyring service, a crucial factor affecting income and penalties for providing services.
+- **`device_owner`**: The owner of the keyring service. This is a crucial factor affecting the income and penalties for providing services.
 
-- **`db_path`**: The storage path for the keyring service to persist data. It is not recommended to modify this. If you need to change it, please refer to the [occlum file system](https://occlum.readthedocs.io/en/latest/filesystem/fs_overview.html).
+- **`db_path`**: The path where the keyring service persists its data. Modifying it is not recommended. If you do need to change it, refer to the [Occlum file system](https://occlum.readthedocs.io/en/latest/filesystem/fs_overview.html).
 
-- **`db_option.create_if_missing`**: Runtime parameters for the RocksDB database exposed by the keyring service.
+- **`db_option.create_if_missing`**: Runtime parameter of the RocksDB database exposed by the keyring service.
 
-- **`db_option.atomic_flush`**: Runtime parameters for the RocksDB database exposed by the keyring service.
-  
-- **`prime_factory_config.threads`**: The number of threads that will be occupied when a new version is launched, with each version being initialized and called once, will occupy CPU for a period of time. In order to avoid occupying all CPU, adjustments can be made as appropriate (by default, all threads are occupied).
-- **`prime_factory_config.target`**: The target number for generating safe prime numbers should be slightly larger during actual running, preferably between 100 and 1000. The larger the number, the longer the initialization time (default value is 500).
+- **`db_option.atomic_flush`**: Runtime parameter of the RocksDB database exposed by the keyring service.
 
-- **`network_config.protocol_id`**: The division of P2P network protocols is particularly important. Different networks have different `protocol_id`. Please follow the official configuration, otherwise the link will be invalid.
+- **`prime_factory_config.threads`**: The number of threads occupied when a new version is launched. Each version is initialized and called once, occupying CPU for a period of time. To avoid occupying all CPUs, adjust this value as appropriate (by default, all threads are occupied).
 
-- **`network_config.port`**: The local port number for the keyring service's P2P.
+- **`prime_factory_config.target`**: The target number of safe primes to generate. During actual operation it should be slightly larger, preferably between 100 and 1000. The larger the number, the longer the initialization time (default value: 500).
 
-- **`network_config.is_mdns`**: MDNS discovery enabled.
+- **`network_config.protocol_id`**: The P2P network protocol identifier, which is particularly important. Different networks use different `protocol_id` values. Follow the official configuration, otherwise the link will be invalid.
 
-- **`network_config.is_autonat`**: Autonat discovery enabled.
-  
-- **`network_config.max_peers_connected`**: Maximum number of nodes allowed to be connected.
+- **`network_config.port`**: The local port for the keyring service's P2P communication.
 
-- **`network_config.boot_nodes`**: Information for the keyring service's P2P module to connect to other services. If configured incorrectly, it will become an isolated node and cannot participate in the service.
+- **`network_config.is_mdns`**: Whether mDNS discovery is enabled.
 
-- **`network_config.share_peer_interval`**: The interval at which the keyring service's P2P module outputs the number of node connections.
+- **`network_config.is_autonat`**: Whether AutoNAT discovery is enabled.
 
-- **`network_config.only_global_ips`**: Whether the keyring service's P2P module only manages public IP addresses.
+- **`network_config.max_peers_connected`**: The maximum number of nodes allowed to connect.
 
-- **`network_config.peer_key`**: Specifies the keyring service's P2P identity information. If not filled, it will be generated randomly.
+- **`network_config.boot_nodes`**: The peers that the keyring service's P2P module connects to. If misconfigured, the node becomes isolated and cannot participate in the service.
 
-- **`key_server_config.attestation_style`**: The mode of SGX remote attestation for the keyring service, where `1` represents `EPID` and `2` represents `DCAP`.
+- **`network_config.share_peer_interval`**: The interval at which the keyring service's P2P module reports the number of connected nodes.
 
-- **`key_server_config.seal_policy`**: The data encryption method for the keyring service, supporting `MRSIGNER` and `MRENCLAVE`. It has the same meaning as [Intel SGX sealing](https://www.intel.com/content/www/us/en/developer/articles/technical/introduction-to-intel-sgx-sealing.html). `MRSIGNER` trusts the software publisher, and the advantage is that it is compatible with historical data after software upgrades. `MRENCLAVE` only trusts the code, and the disadvantage is that it cannot read historical data after software upgrades.
+- **`network_config.only_global_ips`**: Whether the keyring service's P2P module manages only public IP addresses.
 
-- **`key_server_config.exe_policy`**: Optional execution engine that affects software execution efficiency. Generally, it does not need to be changed.
+- **`network_config.peer_key`**: The keyring service's P2P identity key. If left empty, it is generated randomly.
 
-- **`key_server_config.round_time_limit`**: The waiting time in seconds for data interaction between keyring services. The session ends if it exceeds the waiting time.
+- **`key_server_config.attestation_style`**: The SGX remote attestation mode of the keyring service, where `1` is `EPID` and `2` is `DCAP`.
 
-- **`key_server_config.clear_msg_interval`**: The interval in seconds for the keyring service to clear abnormal data.
+- **`key_server_config.seal_policy`**: The data encryption method of the keyring service, supporting `MRSIGNER` and `MRENCLAVE`. It has the same meaning as [Intel SGX sealing](https://www.intel.com/content/www/us/en/developer/articles/technical/introduction-to-intel-sgx-sealing.html). `MRSIGNER` trusts the software publisher, and its advantage is that data remains readable after a software upgrade. `MRENCLAVE` trusts only the code, and its disadvantage is that historical data cannot be read after a software upgrade.
 
+- **`key_server_config.exe_policy`**: An optional execution engine that affects software execution efficiency. It generally does not need to be changed.
 
-We employ Docker Compose for service management. If you need to specify a storage directory, you can modify the disk mapping in the `docker-compose.yaml` file to `./data`. By default, the data for the keyring service is stored in the same directory as the `docker-compose.yaml` file.
+- **`key_server_config.round_time_limit`**: The waiting time, in seconds, for data exchange between keyring services. The session ends if the waiting time is exceeded.
 
+- **`key_server_config.clear_msg_interval`**: The interval, in seconds, at which the keyring service clears abnormal data.
 
-```text
+We use Docker Compose to manage the service. If you need to specify a storage directory, modify the disk mapping in the `docker-compose.yml` file to `./data`. By default, the keyring service's data is stored in the same directory as the `docker-compose.yml` file.
+
+```yaml
 volumes:
     - ./configs:/configs
     - ./data:/root/occlum_instance/data
 ```
 
-Note: `/root/occlum_instance/data`  is an internal directory within Occlum and does not require modification.
+Note: `/root/occlum_instance/data` is an internal directory within Occlum and does not need to be modified.
 
 ### Startup and Maintenance
 
-Before starting, we should check if `docker compose` is installed on the system. You can check this by running `docker compose --version ` or `docker-compose --version`. If it's not installed, you'll need to install it.
+Before starting, check whether `docker compose` is installed. You can verify this by running `docker compose --version` or `docker-compose --version`. If it is not installed, install it:
 
 ```shell
 # install docker-compose
@@ -221,58 +220,57 @@ sudo chmod +x /usr/local/bin/docker-compose
 docker-compose --version
 ```
 
-To start and view logs, use the following commands:
+To start the service and view its logs, use the following commands:
 
 ```shell
 docker-compose up -d
-docker-compose logs -f 
+docker-compose logs -f
 ```
 
-Wait for the software to run. In case of any errors, consult the [FAQ](#FAQ).
+Wait for the software to start. If any error occurs, consult the [FAQ](#faq).
 
-If the software is running correctly, you will observe logs similar to the following in the terminal:
+If the software is running correctly, you will see logs similar to the following:
 
 ```text
 register sgx: "0x13bec2ac21b038d885d49d8100d307ce7761cf890bbdf25962a0eb2f2ac18101"
 ```
 
-Login your `device_owner` account to [DeepS's DHC](https://dhc.deeps.fi/beta_mainnet), unlisted devices will initially appear in the device list.
+Log in to [DeepS DHC](https://test-dhcs.deeps.fi/testnet) with your `device_owner` account. Unlisted devices initially appear in the device list.
 
-
-**All subsequent actions will require Metamask signature. Please verify that the connected account in Metamask matches the `device_owner` account in your `keyring.toml` file to ensure consistency.**
+**All subsequent actions require a MetaMask signature. Verify that the account connected in MetaMask matches the `device_owner` account in your `keyring.toml` file.**
 
 #### Update Device
 
-Go to the [DeepS's DHC](https://dhc.deeps.fi/beta_mainnet) to activate the device. You need to vote tokens for the first time.
+Go to [DeepS DHC](https://test-dhcs.deeps.fi/testnet) to activate the device. For the first time, you need to vote tokens for it.
 
 ![dhc-launch](./images/dhc-launch.png)
 
-For quick start, we need to stake 20000tBol at a time, and then click the `Submit` button.
+For a quick start, stake 100000 tDPS at a time, then click the `Submit` button.
 
 ![dhc-submit](./images/dhc-submit.png)
 
-Wait for a epoch, and after the total stake amount reaches the condition (20000tBol), participate in the service through the 'Join Service'.
+Wait for one epoch, and once the total staked amount reaches the threshold (100000 tDPS), join the service via `Join Service`.
 
 ![dhc-join](./images/dhc-join.png)
 
-When you see the device status change to `Service`, **congratulations** - the process is complete.
+When the device status changes to `Service`, **congratulations** 鈥?the process is complete.
 
 ![dhc-joined](./images/dhc-joined.png)
 
-> Check if the software is running correctly, indicated by the following logs: 
-> HeartBeat session: 40167, challenge: [124, 148, 169, 145, 235, 214, 178, 134, 90, 10, 228, 25, 131, 65, 254, 0, 98, 93, 83, 204, 48, 182, 48, 209, 19, 158, 45, 233, 49, 254, 25, 129], hash: "0xa746ff7daae0952967cc9eadb38e6627052cd073cf0a319cb8fcb65e0abdabef"
+> To check whether the software is running correctly, look for logs like the following:
+> `HeartBeat session: 40167, challenge: [...], hash: "0xa746ff7daae0952967cc9eadb38e6627052cd073cf0a319cb8fcb65e0abdabef"`
 
 #### Exiting the Service (if required)
 
-Note: The system penalizes malicious nodes by deducting their staked tokens. To avoid financial losses due to irregular exits, please follow the process below to exit.
+Note: The system penalizes malicious nodes by deducting their staked tokens. To avoid financial losses caused by an irregular exit, follow the process below.
 
-Exit the service by executing `Exit Service`:
+Exit the service by selecting `Exit Service`:
 
 ![dhc-exit](./images/dhc-exit.png)
 
-After executing `Exit Service`, you need to wait for a epoch before you can execute `Remove Device`. You can't perform any operations during this period.
+After selecting `Exit Service`, you must wait one epoch before you can select `Remove Device`. No operations are available during this period.
 
-Finally, stop your keyring service.
+Finally, stop your keyring service:
 
 ```shell
 docker compose down
@@ -280,4 +278,4 @@ docker compose down
 
 ## FAQ
 
-Refer to Document [troubleshooting](https://docs.deeps.fi/node-operations/troubleshooting)
+Refer to the [troubleshooting documentation](https://docs.deeps.fi/node-operations/troubleshooting).
