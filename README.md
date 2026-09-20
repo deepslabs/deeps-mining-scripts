@@ -12,6 +12,7 @@
     - [Startup and Maintenance](#startup-and-maintenance)
       - [Create new profile](#create-new-profile)
       - [Replace owner](#replace-owner)
+      - [Replace PCCS URL](#replace-pccs-url)
       - [Start server](#start-server)
       - [Update Device](#update-device)
       - [Exiting the Service (if required)](#exiting-the-service-if-required)
@@ -27,19 +28,15 @@ Then clone the repository:
 git clone https://github.com/deepslabs/deeps-mining-scripts.git
 ```
 
+> [!IMPORTANT]
+> **This guide is written for Ubuntu 22.04 on an [Azure cloud instance](https://docs.deeps.fi/node-operations/hardware/purchase-guide).** All commands below have been verified in that environment only.
+
 ## SGX
 
 Inspect your system's SGX support with:
 
 ```shell
 sudo ./sgx-detect
-```
-
-Install the packages required to build the SGX driver:
-
-```shell
-sudo apt update
-sudo apt install build-essential automake autoconf libtool wget python3 libssl-dev dkms
 ```
 
 Sample output:
@@ -148,13 +145,31 @@ Success: Generated keyring.toml for testnet
 ./dhc owner 0x34a5572cb21d34354e3091564d5edc7b791e9d5f
 ```
 
+#### Replace PCCS URL
+
+By default, `configs/sgx_default_qcnl.conf` points to a local PCCS (`https://localhost:8081/sgx/certification/v3/`). There is usually no local PCCS running, so replace the `pccs_url` with a public one. The examples in the documentation use the Azure PCCS `https://global.acccache.azure.net/sgx/certification/v3/`.
+
+Replace `pccs_url` with a single command:
+
+```shell
+sed -i 's#"pccs_url":.*#"pccs_url": "https://global.acccache.azure.net/sgx/certification/v3/",#' configs/sgx_default_qcnl.conf
+```
+
+Or edit the file manually:
+
+```shell
+vi configs/sgx_default_qcnl.conf
+```
+
+> This file is mounted into the container as `/etc/sgx_default_qcnl.conf`. If the service is already running, restart it for the change to take effect.
+
 #### Start server
 
 To start the service and view its logs, use the following commands:
 
 ```shell
-docker-compose up -d
-docker-compose logs -f
+./dhc start
+./dhc logs -f
 ```
 
 Wait for the software to start. If any error occurs, consult the [FAQ](#faq).

@@ -1,7 +1,7 @@
 version: "3"
 services:
   bnk-occlum-keyring:
-    image: deepslabs/deeps-occlum-keyring:pre1.2.0
+    image: deepslabs/deeps-occlum-keyring:pre1.2.2
     restart: always
     network_mode: "host"
     environment:
