@@ -280,25 +280,4 @@ docker compose down
 
 ## FAQ
 
-<span id="FAQ"> </span>
-
-**If there is no device registration information on Boolscan or you receive the error message： `register failed for "Rpc error: RPC error: RPC call failed: ErrorObject { code: ServerError(1010), message: \"Invalid Transaction\", data: Some(RawValue(\"Custom error: 28\")) }`**
-
-It indicates that keyring version number does not match.
-
-**If you encounter an error during startup with the message: `[get_platform_quote_cert_data ../qe_logic.cpp:388] Error returned from the p_sgx_get_quote_config API. 0xe011.  Or [get_platform_quote_cert_data ../qe_logic.cpp:378] Error returned from the p_sgx_get_quote_config API. 0xe019`**
-
-0xe011 means "The platform library doesn't have any platfrom cert data". If you set up the PCCS service by yourself, please follow [intel guide](https://www.intel.com/content/www/us/en/developer/articles/guide/intel-software-guard-extensions-data-center-attestation-primitives-quick-install-guide.html) strictly. If you run in cloud, Use the pccs service provided by the cloud service provider. 
-
-```text
-Azure "pccs_url": "https://global.acccache.azure.net/sgx/certification/v3"
-Ali "pccs_url": "https://sgx-dcap-server.cn-hangzhou.aliyuncs.com/sgx/certification/v3/"
-```
-
-**If you encounter an error during startup with the message: `[ERROR] occlum-pal:     SIGILL Caught ! (line 37, file src/pal_check_fsgsbase.c) [ERROR] occlum-pal: FSGSBASE enablement check failed. (line 89, file src/pal_api.c`**
-
-```
-git clone https://github.com/occlum/enable_rdfsbase.git
-cd enable_rdfsbase 
-make && make install
-```
+Refer to Document [troubleshooting](https://docs.deeps.fi/node-operations/troubleshooting)
