@@ -18,14 +18,14 @@ readonly NC='\033[0m' # No Color
 
 # Network configurations
 declare -A NETWORK_CONFIGS=(
-    ["mainnet"]="betamainnet"
-    ["testnet"]="betatestnet"
+    ["mainnet"]="deeps_mainnet"
+    ["testnet"]="deeps_testnet"
 )
 
 # Boot nodes configurations
 declare -A BOOT_NODES=(
     ["mainnet"]='["/ip4/172.206.59.67/tcp/38711/p2p/12D3KooWCHDHXGmkv6hKvxxhmwAHUWESw2hB1PUKR1cK9n4AUwNu","/ip4/172.183.120.78/tcp/38711/p2p/12D3KooWPbeTa7VeDdQFwBsZrVcF7sGT8aTJ6UjAV6ALyx7z3M45","/ip4/13.64.14.199/tcp/38711/p2p/12D3KooWDqWhQYNjKZoVdSnDfqUD2vYNSHktp6yzuQC9pLwpsttL"]'
-    ["testnet"]='["/ip4/172.210.130.200/tcp/38701/p2p/12D3KooWQBrkBWb3tLoUpxqXebxg1Eab24LfcFP3hv37ZF2c6qgz","/ip4/20.81.161.179/tcp/38701/p2p/12D3KooWMDqap7HMjA6nos1HpHpWt8JBcPepnZgYSd5PPmovAqD7"]'
+    ["testnet"]='["/ip4/34.23.38.130/tcp/38722/p2p/12D3KooWRViJff9cRdN1FftDmqMQw6ouwqsit7Cdt8E5ETky8BQq","/ip4/34.138.221.245/tcp/38722/p2p/12D3KooWQ8CEvPkJHwTVmGytbKzyf3sTZ4FYT9QihNqvhdpTJsJi"]'
 )
 
 # Error handling
@@ -55,6 +55,7 @@ Usage: $(basename "$0") COMMAND [OPTIONS]
 
 Commands:
   config   Generate keyring.toml configuration file
+  owner    Replace device_owner in keyring.toml with the given address
   start    Start the DHC service
   stop     Stop the DHC service
   status   Show service status
@@ -69,7 +70,8 @@ Options:
   -h, --help                       Show this help message
 
 Examples:
-  $(basename "$0") config --network mainnet      Generate mainnet configuration
+  $(basename "$0") config --network mainnet     Generate mainnet configuration
+  $(basename "$0") owner 0x...                  Set device_owner in keyring.toml
   $(basename "$0") start                        Start the service
   $(basename "$0") stop                         Stop the service
   $(basename "$0") status                       Show service status
@@ -140,6 +142,32 @@ generate_keyring_config() {
     rm -f "$temp_file"
     
     success "Generated keyring.toml for $network"
+}
+
+# Replace device_owner in keyring.toml
+replace_owner() {
+    local owner=$1
+    
+    # Validate address format: 0x followed by 40 hex characters
+    if [[ ! "$owner" =~ ^0[xX][0-9a-fA-F]{40}$ ]]; then
+        error "Invalid owner address: $owner\nExpected format: 0x followed by 40 hexadecimal characters (e.g. 0x34a5572cb21d34354e3091564d5edc7b791e9d5f)"
+    fi
+    
+    if [[ ! -f "$KEYRING_FILE" ]]; then
+        error "keyring.toml not found. Please generate configuration first:\n$(basename "$0") config --network <mainnet|testnet>"
+    fi
+    
+    if ! grep -q "^device_owner" "$KEYRING_FILE"; then
+        error "Failed to find device_owner in keyring.toml"
+    fi
+    
+    info "Replacing device_owner with $owner..."
+    
+    # Replace the device_owner line in place
+    sed -i -E "s#^device_owner[[:space:]]*=.*#device_owner = \"${owner}\"#" "$KEYRING_FILE" \
+        || error "Failed to replace device_owner"
+    
+    success "device_owner updated to $owner"
 }
 
 # Check if service is running
@@ -286,12 +314,18 @@ parse_args() {
     local network=""
     local follow=false
     local tail=""
+    local owner_address=""
     
     while [[ $# -gt 0 ]]; do
         case $1 in
-            config|start|stop|status|logs|join|exit)
+            config|owner|start|stop|status|logs|join|exit)
                 [[ -n "$command" ]] && error "Multiple commands specified"
                 command=$1
+                shift
+                ;;
+            0[xX]*)
+                [[ -z "$owner_address" ]] || error "Multiple owner addresses specified"
+                owner_address=$1
                 shift
                 ;;
             -n|--network)
@@ -328,6 +362,10 @@ parse_args() {
             [[ -z "$network" ]] && error "Network parameter is required for config command"
             generate_keyring_config "$network"
             ;;
+        owner)
+            [[ -z "$owner_address" ]] && error "Owner address is required for owner command\nUsage: $(basename "$0") owner 0x..."
+            replace_owner "$owner_address"
+            ;;
         start)
             start_service
             ;;
@@ -351,8 +389,27 @@ parse_args() {
 
 # Main function
 main() {
+    # Show help when no arguments are provided
+    if [[ $# -eq 0 ]]; then
+        print_help
+        exit 0
+    fi
+    
     check_files
-    check_dependencies
+    
+    # config and owner only modify local files, so Docker is not required
+    local requires_docker=true
+    local arg
+    for arg in "$@"; do
+        case "$arg" in
+            config|owner)
+                requires_docker=false
+                break
+                ;;
+        esac
+    done
+    [[ "$requires_docker" == true ]] && check_dependencies
+    
     parse_args "$@"
 }
 

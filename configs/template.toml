@@ -1,4 +1,4 @@
-node_ws_url = "ws://127.0.0.1:9944"
+node_ws_url = "wss://rpc-testnet.deeps.fi"
 # the owner address of device （ETH type format）
 device_owner = "0x0000000000000000000000000000000000000000"
 # database path

@@ -3,13 +3,16 @@
 - [Mining Guidance](#mining-guidance)
   - [Instructions](#instructions)
   - [SGX](#sgx)
+  - [Install the Docker Environment](#install-the-docker-environment)
   - [Running the Service](#running-the-service)
     - [Preparing an Account](#preparing-an-account)
       - [Option 1](#option-1)
       - [Option 2](#option-2)
     - [Preparing Tokens](#preparing-tokens)
-    - [Configuration Modification](#configuration-modification)
     - [Startup and Maintenance](#startup-and-maintenance)
+      - [Create new profile](#create-new-profile)
+      - [Replace owner](#replace-owner)
+      - [Start server](#start-server)
       - [Update Device](#update-device)
       - [Exiting the Service (if required)](#exiting-the-service-if-required)
   - [FAQ](#faq)
@@ -72,6 +75,25 @@ sudo ./sgx_enable
 sudo reboot
 ```
 
+## Install the Docker Environment
+
+```shell
+# Install the Docker runtime environment
+sudo curl -fsSL https://get.docker.com | bash -s docker
+sudo systemctl enable docker
+sudo systemctl start docker
+# Check if the Docker service started correctly
+sudo systemctl status docker
+# Press Ctrl+C to exit the status view
+sudo chmod 666 /var/run/docker.sock
+docker version
+# Download the docker-compose program
+sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+# Install docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+docker-compose --version
+```
+
 ## Running the Service
 
 Once you have confirmed that your machine supports SGX2, you can launch the keyring service. The keyring service obtains events and state from a node service. In the configuration file, it is advisable to use an official node as the data source. Alternatively, you can start a local full node and use it as the data source once synchronization is complete.
@@ -105,120 +127,28 @@ We recommend MetaMask here, since subsequent operations require interaction with
 
 Fund your address with some tDPS so that the device can be deployed.
 
-### Configuration Modification
-
-For most users, simply replace `device_owner` in the default configuration file with the `Account ID` created in the previous step. No other parameters need to be modified.
-
-For example, open the `keyring.toml` file under the `configs` directory and replace `0x00000000000000000000000000000000000000` with your `<Account ID>`.
-
-Run `./dhc config -n <network>` to generate the default configuration file. It covers identity information, service ports, the P2P network, the service launch type, and so on, as shown below:
-
-```toml
-node_ws_url = "ws://127.0.0.1:9944"
-# local node_call server port.
-node_call_port = 8720
-# the owner address of the device (ETH format)
-device_owner = "0x00000000000000000000000000000000000000"
-# database path
-db_path = "/host/data"
-# tokio console port
-console_port = 5555
-
-# database start option
-[db_option]
-create_if_missing = true
-atomic_flush = true
-
-[prime_factory_config]
-threads = 5
-target = 500
-
-[network_config]
-protocol_id = "betamainnet"
-port = 38700
-boot_nodes =["/ip4/172.210.130.200/tcp/38701/p2p/12D3KooWQBrkBWb3tLoUpxqXebxg1Eab24LfcFP3hv37ZF2c6qgz","/ip4/20.81.161.179/tcp/38701/p2p/12D3KooWMDqap7HMjA6nos1HpHpWt8JBcPepnZgYSd5PPmovAqD7"]
-share_peer_interval = 30
-is_mdns = true
-is_autonat = true
-only_global_ips = true
-#max_peers_connected = 50
-#peer_key = "0x0000000000000000000000000000000000000000000000000000000000011111"
-#external_multiaddrs = ["/ip4/127.0.0.1/tcp/38700"]
-
-[key_server_config]
-attestation_style = 2 # This corresponds to using an image: epid=1, dcap=2
-seal_policy = "MRENCLAVE"
-exe_policy = { Multiply = { executors = 8 } }
-round_time_limit = 180
-clear_msg_interval = 360
-```
-
-Parameter descriptions:
-
-- **`node_ws_url`**: The accessible endpoint of the node service. For a local node, this is usually `ws://127.0.0.1:9944`.
-
-- **`node_call_port`**: The port on which the keyring service is exposed to the outside world.
-
-- **`device_owner`**: The owner of the keyring service. This is a crucial factor affecting the income and penalties for providing services.
-
-- **`db_path`**: The path where the keyring service persists its data. Modifying it is not recommended. If you do need to change it, refer to the [Occlum file system](https://occlum.readthedocs.io/en/latest/filesystem/fs_overview.html).
-
-- **`db_option.create_if_missing`**: Runtime parameter of the RocksDB database exposed by the keyring service.
-
-- **`db_option.atomic_flush`**: Runtime parameter of the RocksDB database exposed by the keyring service.
-
-- **`prime_factory_config.threads`**: The number of threads occupied when a new version is launched. Each version is initialized and called once, occupying CPU for a period of time. To avoid occupying all CPUs, adjust this value as appropriate (by default, all threads are occupied).
-
-- **`prime_factory_config.target`**: The target number of safe primes to generate. During actual operation it should be slightly larger, preferably between 100 and 1000. The larger the number, the longer the initialization time (default value: 500).
-
-- **`network_config.protocol_id`**: The P2P network protocol identifier, which is particularly important. Different networks use different `protocol_id` values. Follow the official configuration, otherwise the link will be invalid.
-
-- **`network_config.port`**: The local port for the keyring service's P2P communication.
-
-- **`network_config.is_mdns`**: Whether mDNS discovery is enabled.
-
-- **`network_config.is_autonat`**: Whether AutoNAT discovery is enabled.
-
-- **`network_config.max_peers_connected`**: The maximum number of nodes allowed to connect.
-
-- **`network_config.boot_nodes`**: The peers that the keyring service's P2P module connects to. If misconfigured, the node becomes isolated and cannot participate in the service.
-
-- **`network_config.share_peer_interval`**: The interval at which the keyring service's P2P module reports the number of connected nodes.
-
-- **`network_config.only_global_ips`**: Whether the keyring service's P2P module manages only public IP addresses.
-
-- **`network_config.peer_key`**: The keyring service's P2P identity key. If left empty, it is generated randomly.
-
-- **`key_server_config.attestation_style`**: The SGX remote attestation mode of the keyring service, where `1` is `EPID` and `2` is `DCAP`.
-
-- **`key_server_config.seal_policy`**: The data encryption method of the keyring service, supporting `MRSIGNER` and `MRENCLAVE`. It has the same meaning as [Intel SGX sealing](https://www.intel.com/content/www/us/en/developer/articles/technical/introduction-to-intel-sgx-sealing.html). `MRSIGNER` trusts the software publisher, and its advantage is that data remains readable after a software upgrade. `MRENCLAVE` trusts only the code, and its disadvantage is that historical data cannot be read after a software upgrade.
-
-- **`key_server_config.exe_policy`**: An optional execution engine that affects software execution efficiency. It generally does not need to be changed.
-
-- **`key_server_config.round_time_limit`**: The waiting time, in seconds, for data exchange between keyring services. The session ends if the waiting time is exceeded.
-
-- **`key_server_config.clear_msg_interval`**: The interval, in seconds, at which the keyring service clears abnormal data.
-
-We use Docker Compose to manage the service. If you need to specify a storage directory, modify the disk mapping in the `docker-compose.yml` file to `./data`. By default, the keyring service's data is stored in the same directory as the `docker-compose.yml` file.
-
-```yaml
-volumes:
-    - ./configs:/configs
-    - ./data:/root/occlum_instance/data
-```
-
-Note: `/root/occlum_instance/data` is an internal directory within Occlum and does not need to be modified.
-
 ### Startup and Maintenance
 
-Before starting, check whether `docker compose` is installed. You can verify this by running `docker compose --version` or `docker-compose --version`. If it is not installed, install it:
+#### Create new profile
 
 ```shell
-# install docker-compose
-sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-docker-compose --version
+./dhc config --network testnet
 ```
+
+Output:
+
+```text
+Info: Generating keyring.toml for testnet...
+Success: Generated keyring.toml for testnet
+```
+
+#### Replace owner
+
+```shell
+./dhc owner 0x34a5572cb21d34354e3091564d5edc7b791e9d5f
+```
+
+#### Start server
 
 To start the service and view its logs, use the following commands:
 
