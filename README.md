@@ -21,7 +21,7 @@ Before starting, please cofirm on [Intel© Ark](https://ark.intel.com/content/ww
 Start by cloning the repository.
 
 ```bash
-git clone https://github.com/deepsafe/def-mining-scripts.git
+git clone https://github.com/deepslabs/deeps-mining-scripts.git
 ```
 
 ## SGX
@@ -36,8 +36,6 @@ Install sgx driver:
 ```
 apt update
 apt install  build-essential  automake autoconf libtool wget python libssl-dev dkms
-wget https://download.01.org/intel-sgx/latest/linux-latest/distro/ubuntu18.04-server/sgx_linux_x64_driver_1.41.bin
-bash sgx_linux_x64_driver_1.41.bin
 ```
 
 Sample Output:
@@ -83,7 +81,7 @@ Before initiating the process, you must create an account to serve as the owner 
 
 #### Option 1
 
-Generate an account using the command `docker run -it --rm deepsafe/def-node:release identity generate`.
+Generate an account using the command `docker run -it --rm deepslabs/deeps-node:pre-beta identity generate`.
 
 You will receive an output like this:
 
@@ -98,9 +96,9 @@ Account ID:       0x34a5572cb21d34354e3091564d5edc7b791e9d5f
 
 #### Option 2
 
-An alternative approach is to create an account using MetaMask since DeepSafe's account system is Ethereum-compatible.
+An alternative approach is to create an account using MetaMask since the DeepS account system is Ethereum-compatible.
 
-We recommend using MetaMask here because subsequent operations will require interaction with the [crva dashboard](https://crva.deepsafe.network/beta_mainnet).
+We recommend using MetaMask here because subsequent operations will require interaction with the [dhc dashboard](https://dhc.deeps.fi/beta_mainnet).
 
 ### Preparing Coin
 
@@ -113,7 +111,7 @@ For the majority of users, just substitute the `device_owner` in the default con
 For example：
 Open the `keyring.toml` file under the `configs` directory and replace `0x00000000000000000000000000000000000000`with your `<Account ID>`。
 
-The default configuration file, encompassing identity information, service ports, P2P network, service launch types, etc., is as follows：
+Use `./dhc config -n <network>` to generate the default configuration file, encompassing identity information, service ports, P2P network, service launch types, etc., is as follows：
 
 ```toml
 node_ws_url = "ws://127.0.0.1:9944"
@@ -136,7 +134,7 @@ threads = 5
 target = 500
 
 [network_config]
-protocol_id = "betatestnet"
+protocol_id = "betamainnet"
 port = 38700
 boot_nodes =["/ip4/172.210.130.200/tcp/38701/p2p/12D3KooWQBrkBWb3tLoUpxqXebxg1Eab24LfcFP3hv37ZF2c6qgz","/ip4/20.81.161.179/tcp/38701/p2p/12D3KooWMDqap7HMjA6nos1HpHpWt8JBcPepnZgYSd5PPmovAqD7"]
 share_peer_interval = 30
@@ -238,29 +236,28 @@ If the software is running correctly, you will observe logs similar to the follo
 register sgx: "0x13bec2ac21b038d885d49d8100d307ce7761cf890bbdf25962a0eb2f2ac18101"
 ```
 
-Login your `device_owner` account to [DeepSafe's CRVA](https://crva.deepsafe.network/beta_mainnet), unlisted devices will initially appear in the device list:
+Login your `device_owner` account to [DeepS's DHC](https://dhc.deeps.fi/beta_mainnet), unlisted devices will initially appear in the device list.
 
-![crva-unlist](./images/crva-unlist.png)
 
 **All subsequent actions will require Metamask signature. Please verify that the connected account in Metamask matches the `device_owner` account in your `keyring.toml` file to ensure consistency.**
 
 #### Update Device
 
-Go to the [DeepSafe's CRVA](https://crva.deepsafe.network/beta_mainnet) to activate the device. You need to vote tokens for the first time.
+Go to the [DeepS's DHC](https://dhc.deeps.fi/beta_mainnet) to activate the device. You need to vote tokens for the first time.
 
-![crva-launch](./images/crva-launch.png)
+![dhc-launch](./images/dhc-launch.png)
 
 For quick start, we need to stake 20000tBol at a time, and then click the `Submit` button.
 
-![crva-submit](./images/crva-submit.png)
+![dhc-submit](./images/dhc-submit.png)
 
 Wait for a epoch, and after the total stake amount reaches the condition (20000tBol), participate in the service through the 'Join Service'.
 
-![crva-join](./images/crva-join.png)
+![dhc-join](./images/dhc-join.png)
 
 When you see the device status change to `Service`, **congratulations** - the process is complete.
 
-![crva-joined](./images/crva-joined.png)
+![dhc-joined](./images/dhc-joined.png)
 
 > Check if the software is running correctly, indicated by the following logs: 
 > HeartBeat session: 40167, challenge: [124, 148, 169, 145, 235, 214, 178, 134, 90, 10, 228, 25, 131, 65, 254, 0, 98, 93, 83, 204, 48, 182, 48, 209, 19, 158, 45, 233, 49, 254, 25, 129], hash: "0xa746ff7daae0952967cc9eadb38e6627052cd073cf0a319cb8fcb65e0abdabef"
@@ -271,7 +268,7 @@ Note: The system penalizes malicious nodes by deducting their staked tokens. To 
 
 Exit the service by executing `Exit Service`:
 
-![crva-exit](./images/crva-exit.png)
+![dhc-exit](./images/dhc-exit.png)
 
 After executing `Exit Service`, you need to wait for a epoch before you can execute `Remove Device`. You can't perform any operations during this period.
 
