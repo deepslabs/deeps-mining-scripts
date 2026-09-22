@@ -29,7 +29,7 @@ git clone https://github.com/deepslabs/deeps-mining-scripts.git
 ```
 
 > [!IMPORTANT]
-> **This guide is written for Ubuntu 22.04 on an [Azure cloud instance](https://docs.deeps.fi/node-operations/hardware/purchase-guide).** All commands below have been verified in that environment only.
+> **This guide is written for Ubuntu 24.04 on an [Azure cloud instance](https://docs.deeps.fi/node-operations/hardware/purchase-guide).** All commands below have been verified in that environment only.
 
 ## SGX
 
