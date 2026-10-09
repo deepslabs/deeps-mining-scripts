@@ -182,7 +182,8 @@ register sgx: "0x13bec2ac21b038d885d49d8100d307ce7761cf890bbdf25962a0eb2f2ac1810
 
 Log in to [DeepS DHC](https://test-dhcs.deeps.fi/testnet) with your `device_owner` account. Unlisted devices initially appear in the device list.
 
-**All subsequent actions require a MetaMask signature. Verify that the account connected in MetaMask matches the `device_owner` account in your `keyring.toml` file.**
+> [!IMPORTANT]
+> **All subsequent actions require a MetaMask signature. Verify that the account connected in MetaMask matches the `device_owner` account in your `keyring.toml` file.**
 
 #### Update Device
 
@@ -194,7 +195,7 @@ For a quick start, stake 100000 tDPS at a time, then click the `Submit` button.
 
 ![dhc-submit](./images/dhc-submit.png)
 
-Wait for one epoch, and once the total staked amount reaches the threshold (100000 tDPS), join the service via `Join Service`.
+Wait for one epoch (8 hours) for the pledge to take effect, and once the total staked amount reaches the threshold (100000 tDPS), join the service via `Join Service`.
 
 ![dhc-join](./images/dhc-join.png)
 
@@ -207,13 +208,14 @@ When the device status changes to `Service`, **congratulations** - the process i
 
 #### Exiting the Service (if required)
 
-Note: The system penalizes malicious nodes by deducting their staked tokens. To avoid financial losses caused by an irregular exit, follow the process below.
+> [!NOTE]
+> The system penalizes malicious nodes by deducting their staked tokens. To avoid financial losses caused by an irregular exit, follow the process below.
 
 Exit the service by selecting `Exit Service`:
 
 ![dhc-exit](./images/dhc-exit.png)
 
-After selecting `Exit Service`, you must wait one epoch before you can select `Remove Device`. No operations are available during this period.
+After selecting `Exit Service`, wait for several cycles so that the node no longer holds any data. No operations are available during this period.
 
 Finally, stop your keyring service:
 
