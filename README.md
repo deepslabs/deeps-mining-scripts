@@ -2,7 +2,7 @@
 
 - [Mining Guidance](#mining-guidance)
   - [Instructions](#instructions)
-  - [SGX](#sgx)
+  - [SGX detect](#sgx-detect)
   - [Install the Docker Environment](#install-the-docker-environment)
   - [Running the Service](#running-the-service)
     - [Preparing an Account](#preparing-an-account)
@@ -31,7 +31,7 @@ git clone https://github.com/deepslabs/deeps-mining-scripts.git
 > [!IMPORTANT]
 > **This guide is written for Ubuntu 24.04 on an [Azure cloud instance](https://docs.deeps.fi/node-operations/hardware/purchase-guide).** All commands below have been verified in that environment only.
 
-## SGX
+## SGX detect
 
 Inspect your system's SGX support with:
 
