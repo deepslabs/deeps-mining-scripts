@@ -36,7 +36,9 @@ git clone https://github.com/deepslabs/deeps-mining-scripts.git
 Inspect your system's SGX support with:
 
 ```shell
-sudo ./sgx-detect
+curl -o sgx-detect https://download.fortanix.com/sgx-detect/ubuntu24.04/sgx-detect
+chmod +x sgx-detect
+./sgx-detect
 ```
 
 Sample output:
@@ -64,13 +66,6 @@ Sample output:
     ✔  Production mode (Intel whitelisted)
 ```
 
-If it displays as `✘ SGX kernel device (/dev/sgx_enclave)`, We should install SGX Environment and restart with:
-
-```shell
-sudo chmod +x sgx_enable
-sudo ./sgx_enable
-sudo reboot
-```
 
 ## Install the Docker Environment
 
